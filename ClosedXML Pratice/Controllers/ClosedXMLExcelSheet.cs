@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -43,17 +44,44 @@ namespace ClosedXML_Pratice.Controllers
                 var ws = workBook.Worksheets.Add("Student");
                 var ws01 = workBook.Worksheets.Add("Grade");
                 var ws02 = workBook.Worksheets.Add("Grade01", 2); // pachadi ko number chai position
+
+                //Getting worksheet name 
+                IXLWorksheet worksheet = workBook.Worksheet(ws.Name);
+                var xx = worksheet.Name;
+
                 var currentRow = 1;
                 ws.Cell(currentRow, 1).Value = "StudentId";
                 ws.Cell(currentRow, 2).Value = "Name";
                 ws.Cell(currentRow, 3).Value = "Roll";
+                ws.Cell(currentRow, 4).Value = "Int";
+
+                currentRow++;
+
+                ws.Range(ws.Cell(currentRow - 1, 1), ws.Cell(currentRow ++, 1)).Merge();
+                ws.Range(ws.Cell(currentRow - 1, 1), ws.Cell(currentRow, 1)).Value = "Merge";
+
+
+
+                //Suru ko thulo heading yo ho 
+                var temp = ws01.Range(ws01.Cell(1, 1), ws01.Cell(1, 10));
+                temp.Merge();
+                temp.Value = "Hello";
+                temp.Style.Font.Bold = true;
+                temp.Style.Font.FontSize = 50;
+                temp.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+
 
                 foreach (var student in students)
                 {
                     currentRow++;
                     ws.Cell(currentRow, 1).Value = student.Id;
+                    //Alignment in center
+                    ws.Cell(currentRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                     ws.Cell(currentRow, 2).Value = student.Name;
                     ws.Cell(currentRow, 3).Value = student.RollNumber;
+                    ws.Cell(currentRow, 4).Value = 2;
+                    ws.Cell(currentRow, 4).SetDataType(XLDataType.Number);
                 }
 
                 //single work sheet color
@@ -61,8 +89,8 @@ namespace ClosedXML_Pratice.Controllers
 
                 //Range ma color lagaune
                 IXLRange range01 = ws.Range(ws.Cell(4, 2).Address, ws.Cell(6, 4).Address);
-                range01.Style.Fill.SetBackgroundColor(XLColor.Cyan);
-                range01.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FF996515"));
+                //range01.Style.Fill.SetBackgroundColor(XLColor.Cyan);
+                //range01.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FF996515"));
 
 
                 //lining in all excel sheet 
@@ -71,6 +99,9 @@ namespace ClosedXML_Pratice.Controllers
                 range.Style.Border.TopBorder = XLBorderStyleValues.Thin;
                 range.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
                 range.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+
+                //Auto fit column 
+                ws.Columns().AdjustToContents();
 
                 await using var stream = new MemoryStream();
                 workBook.SaveAs(stream);
